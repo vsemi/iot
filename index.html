@@ -228,7 +228,7 @@ window.subTopic = function() {
 		mqttClient.subscribe(t, function (err) {
 		if (!err) {
 			console.log('Topic ', t, ' subscribed!')
-			device_div_p.innerHTML = "<b>Device [" + sensor_id + "]&nbsp;<span id='span_" + sensor_id + "' class='grey'>●</span></b>";
+			device_div_p.innerHTML = "<b>Device [" + sensor_id + "]&nbsp;<span id='span_" + sensor_id + "' class='grey'>&#8226;</span></b>";
 		} else {
 			console.log('Topic ', t, ' subscribe failed!')
 			device_div_p.innerHTML = "<b>Device [" + sensor_id + "]: failed</b>";
