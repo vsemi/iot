@@ -176,7 +176,7 @@ window.mqttClientMessageHandler = function(topic, payload) {
 	counting_results[r.id] = r;
 
 	document.getElementById(r.id + "_st").innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;" + "[" + r.dt + "] In: " + r.in + ", Out: " + r.out;
-	document.getElementById("span_" + r.id).className = "green";
+	document.getElementById("span_" + r.id).className = "red";
 
 	setTimeout(function(){
 		document.getElementById("span_" + r.id).className = "grey";
