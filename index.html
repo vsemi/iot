@@ -1,5 +1,25 @@
 <html>
 <head>
+	<style>
+		html {
+		font-size: 1.4em;
+		}
+		.green {
+		color: green;
+		}
+
+		.red {
+		color: red;
+		}
+
+		.grey {
+		color: grey;
+		}
+
+		.raw-message {
+			font-size: 0.75em;
+		}
+	</style>
 </head>
 <body>
 
@@ -120,17 +140,14 @@ window.mqttClientMessageHandler = function(topic, payload) {
 
 	var msgStr = payload.toString()
 
-	var div_iot_msg = document.getElementById('device_Messages');
-
-	div_iot_msg.innerHTML += "<br>" + msgStr + "</br>";
-
 	var obj = JSON.parse(msgStr);
 	console.log(obj)
 	console.log(obj.in, obj.out)
 
 	console.log('counting_results: ', counting_results)
 
-	var r = counting_results[obj.id];
+	var msg_type = obj.msg_type;
+	var r = counting_results[obj.device_id];
 	console.log('r: ', r)
 	if (r == undefined) {
 		r = {};
@@ -138,14 +155,31 @@ window.mqttClientMessageHandler = function(topic, payload) {
 		r.out = 0;
 	}
 	console.log('r: ', r)
-	r.id  = obj.id;
-	r.in  += parseInt(obj.in);
-	r.out += parseInt(obj.out);
+	r.id  = obj.device_id;
+	if (msg_type == "uplink")
+	{
+		var data = obj.uplink_data;
+		var l = data.length;
+		for (var i = 0; i < l; i ++)
+		{
+			var a = data[i];
+			r.in  += parseInt(a.in);
+			r.out += parseInt(a.out);
+		}
+
+		var div_iot_msg = document.getElementById('device_Messages');
+		div_iot_msg.innerHTML += "<p><span class='raw-message'>" + msgStr + "<span></p>";
+	}
 	r.dt  = obj.dt;
 
 	counting_results[r.id] = r;
 
 	document.getElementById(r.id + "_st").innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;" + "[" + r.dt + "] In: " + r.in + ", Out: " + r.out;
+	document.getElementById("span_" + r.id).className = "green";
+
+	setTimeout(function(){
+		document.getElementById("span_" + r.id).className = "grey";
+	}, 1000);
 };
 
 window.updateSubscriptionTopic = function() {
@@ -193,7 +227,7 @@ window.subTopic = function() {
 		mqttClient.subscribe(t, function (err) {
 		if (!err) {
 			console.log('Topic ', t, ' subscribed!')
-			device_div_p.innerHTML = "<b>Device [" + sensor_id + "]: </b>";
+			device_div_p.innerHTML = "<b>Device [" + sensor_id + "]&nbsp;<span id='span_" + sensor_id + "' class='grey'>●</span></b>";
 		} else {
 			console.log('Topic ', t, ' subscribe failed!')
 			device_div_p.innerHTML = "<b>Device [" + sensor_id + "]: failed</b>";
