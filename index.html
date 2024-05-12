@@ -133,6 +133,29 @@ window.mqttClientConnectHandler = function() {
 
 window.mqttClientReconnectHandler = function() {
    console.log('mqttClient reconnect');
+
+	var cognitoIdentity = new AWS.CognitoIdentity();
+	AWS.config.credentials.get(function(err, data) {
+	   if (!err) {
+		  console.log('retrieved identity: ' + AWS.config.credentials.identityId);
+		  var params = {
+			 IdentityId: AWS.config.credentials.identityId
+		  };
+		  cognitoIdentity.getCredentialsForIdentity(params, function(err, data) {
+			 if (!err) {
+				mqttClient.updateWebSocketCredentials(data.Credentials.AccessKeyId,
+				   data.Credentials.SecretKey,
+				   data.Credentials.SessionToken);
+			 } else {
+				console.log('error retrieving credentials: ' + err);
+				alert('error retrieving credentials: ' + err);
+			 }
+		  });
+	   } else {
+		  console.log('error retrieving identity:' + err);
+		  alert('error retrieving identity: ' + err);
+	   }
+	});
 };
 
 window.mqttClientMessageHandler = function(topic, payload) {
@@ -175,7 +198,7 @@ window.mqttClientMessageHandler = function(topic, payload) {
 	counting_results[r.id] = r;
 
 	document.getElementById(r.id + "_st").innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;" + "[" + r.dt + "] In: " + r.in + ", Out: " + r.out;
-	document.getElementById("span_" + r.id).className = "green";
+	document.getElementById("span_" + r.id).className = "red";
 
 	setTimeout(function(){
 		document.getElementById("span_" + r.id).className = "grey";
