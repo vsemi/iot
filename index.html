@@ -2,18 +2,19 @@
 <head>
 	<style>
 		html {
-		font-size: 1.4em;
+		font-size: 1.2em;
 		}
 		.green {
 		color: green;
 		}
-
 		.red {
 		color: red;
 		}
-
 		.grey {
 		color: grey;
+		}
+		.white {
+		color: white;
 		}
 
 		.raw-message {
@@ -192,17 +193,19 @@ window.mqttClientMessageHandler = function(topic, payload) {
 
 		var div_iot_msg = document.getElementById('device_Messages');
 		div_iot_msg.innerHTML += "<p><span class='raw-message'>" + msgStr + "<span></p>";
+
+		counting_results[r.id] = r;
 	}
-	r.dt  = obj.dt;
+	if (msg_type == "uplink" || msg_type == "ping")
+	{
+		r.dt  = obj.dt;
+		document.getElementById(r.id + "_st").innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;" + "[" + r.dt + "] In: " + r.in + ", Out: " + r.out;
+		document.getElementById("span_" + r.id).className = "red";
 
-	counting_results[r.id] = r;
-
-	document.getElementById(r.id + "_st").innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;" + "[" + r.dt + "] In: " + r.in + ", Out: " + r.out;
-	document.getElementById("span_" + r.id).className = "red";
-
-	setTimeout(function(){
-		document.getElementById("span_" + r.id).className = "grey";
-	}, 1000);
+		setTimeout(function(){
+			document.getElementById("span_" + r.id).className = "white";
+		}, 1000);
+	}
 };
 
 window.updateSubscriptionTopic = function() {
@@ -230,8 +233,34 @@ window.updatePublishData = function() {
    //document.getElementById('publish-data').value = '';
 };
 
+window.requestHeartbeat = function(sensor_id)
+{
+	console.log('Request heart beat: ', sensor_id);
+	var dt = Math.ceil(new Date() / 1000);
+	var payload = '{"device_id":"' + sensor_id + '", "msg_type":"downlink", "dt":"' + dt + '","command":"ping"}';
+	console.log('payload: ', payload);
+	//mqttClient.publish("vsemi/iot/peoplecount/" + sensor_id, JSON.stringify(
+	//	payload
+	//));
+	mqttClient.publish("vsemi/iot/peoplecount/" + sensor_id, payload);
+}
+
 window.subTopic = function() {
 	var sensor_id = document.getElementById("input_topic").value;
+
+	var r = counting_results[sensor_id];
+	console.log('r: ', r)
+	if (r == undefined) {
+		r = {};
+		r.in = 0;
+		r.out = 0;
+		r.id = sensor_id;
+		counting_results[r.id] = r;
+	} else 
+	{
+		return;
+	}	
+
 	var t = "vsemi/iot/peoplecount/" + sensor_id;
 	currentlySubscribedTopic = "vsemi/iot/peoplecount/9830582";
 	console.log('To subscribe topic: ', t)
@@ -250,7 +279,7 @@ window.subTopic = function() {
 		mqttClient.subscribe(t, function (err) {
 		if (!err) {
 			console.log('Topic ', t, ' subscribed!')
-			device_div_p.innerHTML = "<b>Device [" + sensor_id + "]&nbsp;<span id='span_" + sensor_id + "' class='grey'>&#x2B24;</span></b>";
+			device_div_p.innerHTML = "<b>Device [" + sensor_id + "]</b>&nbsp;<input type='button' onclick='requestHeartbeat(\"" + sensor_id + "\")' value='Ping'>&nbsp;<span id='span_" + sensor_id + "' class='white'>&#x2B24;</span>";
 		} else {
 			console.log('Topic ', t, ' subscribe failed!')
 			device_div_p.innerHTML = "<b>Device [" + sensor_id + "]: failed</b>";
