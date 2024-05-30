@@ -280,6 +280,8 @@ window.subTopic = function() {
 		if (!err) {
 			console.log('Topic ', t, ' subscribed!')
 			device_div_p.innerHTML = "<b>Device [" + sensor_id + "]</b>&nbsp;<input type='button' onclick='requestHeartbeat(\"" + sensor_id + "\")' value='Ping'>&nbsp;<span id='span_" + sensor_id + "' class='white'>&#x2B24;</span>";
+
+			requestHeartbeat(sensor_id);
 		} else {
 			console.log('Topic ', t, ' subscribe failed!')
 			device_div_p.innerHTML = "<b>Device [" + sensor_id + "]: failed</b>";
